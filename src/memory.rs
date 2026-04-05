@@ -433,7 +433,7 @@ impl MultipartStore for InMemory {
     ) -> Result<PartId> {
         let mut storage = self.storage.write();
         let upload = storage.upload_mut(id)?;
-        if part_idx <= upload.parts.len() {
+        if part_idx >= upload.parts.len() {
             upload.parts.resize(part_idx + 1, None);
         }
         upload.parts[part_idx] = Some(payload.into());
@@ -609,6 +609,43 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(&*read_data, data);
+    }
+
+    #[tokio::test]
+    async fn multipart_upload_out_of_order_put_part() {
+        use crate::multipart::MultipartStore;
+
+        let store = InMemory::new();
+        let path = Path::from("test_out_of_order");
+
+        let upload_id = store.create_multipart(&path).await.unwrap();
+
+        let part2_data = PutPayload::from(Bytes::from("part2"));
+        let part2 = store
+            .put_part(&path, &upload_id, 2, part2_data)
+            .await
+            .unwrap();
+
+        let part0_data = PutPayload::from(Bytes::from("part0"));
+        let part0 = store
+            .put_part(&path, &upload_id, 0, part0_data)
+            .await
+            .unwrap();
+
+        let part1_data = PutPayload::from(Bytes::from("part1"));
+        let part1 = store
+            .put_part(&path, &upload_id, 1, part1_data)
+            .await
+            .unwrap();
+
+        let result = store
+            .complete_multipart(&path, &upload_id, vec![part0, part1, part2])
+            .await
+            .unwrap();
+        assert!(result.e_tag.is_some(), "Expected e_tag in PutResult");
+
+        let data = store.get(&path).await.unwrap().bytes().await.unwrap();
+        assert_eq!(data.as_ref(), b"part0part1part2");
     }
 
     const NON_EXISTENT_NAME: &str = "nonexistentname";
