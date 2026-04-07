@@ -2154,16 +2154,6 @@ mod tests {
 
     use chrono::TimeZone;
 
-    macro_rules! maybe_skip_integration {
-        () => {
-            if std::env::var("TEST_INTEGRATION").is_err() {
-                eprintln!("Skipping integration test - set TEST_INTEGRATION");
-                return;
-            }
-        };
-    }
-    pub(crate) use maybe_skip_integration;
-
     /// Test that the returned stream does not borrow the lifetime of Path
     fn list_store<'a>(
         store: &'a dyn ObjectStore,
