@@ -1052,6 +1052,40 @@ pub async fn multipart(storage: &dyn ObjectStore, multipart: &dyn MultipartStore
     assert_eq!(meta.size, 0);
 }
 
+/// Tests that [`MultipartStore::put_part`] may be invoked with non-sequential part indices.
+pub async fn multipart_put_part_out_of_order(
+    storage: &dyn ObjectStore,
+    multipart: &dyn MultipartStore,
+) {
+    let path = Path::from("test_multipart_put_part_out_of_order");
+
+    let upload_id = multipart.create_multipart(&path).await.unwrap();
+
+    let part2 = multipart
+        .put_part(&path, &upload_id, 2, PutPayload::from(Bytes::from("part2")))
+        .await
+        .unwrap();
+
+    let part0 = multipart
+        .put_part(&path, &upload_id, 0, PutPayload::from(Bytes::from("part0")))
+        .await
+        .unwrap();
+
+    let part1 = multipart
+        .put_part(&path, &upload_id, 1, PutPayload::from(Bytes::from("part1")))
+        .await
+        .unwrap();
+
+    let result = multipart
+        .complete_multipart(&path, &upload_id, vec![part0, part1, part2])
+        .await
+        .unwrap();
+    assert!(result.e_tag.is_some(), "Expected e_tag in PutResult");
+
+    let data = storage.get(&path).await.unwrap().bytes().await.unwrap();
+    assert_eq!(data.as_ref(), b"part0part1part2");
+}
+
 async fn delete_fixtures(storage: &DynObjectStore) {
     let paths = storage.list(None).map_ok(|meta| meta.location).boxed();
     storage
