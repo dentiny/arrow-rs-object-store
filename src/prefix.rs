@@ -89,7 +89,7 @@ fn strip_meta(prefix: &Path, meta: ObjectMeta) -> ObjectMeta {
         size: meta.size,
         location: strip_prefix(prefix, meta.location),
         e_tag: meta.e_tag,
-        version: None,
+        version: meta.version,
     }
 }
 
