@@ -84,12 +84,19 @@ fn strip_prefix(prefix: &Path, path: Path) -> Path {
 
 /// Strip the constant prefix from a given ObjectMeta
 fn strip_meta(prefix: &Path, meta: ObjectMeta) -> ObjectMeta {
+    let ObjectMeta {
+        last_modified,
+        size,
+        location,
+        e_tag,
+        version,
+    } = meta;
     ObjectMeta {
-        last_modified: meta.last_modified,
-        size: meta.size,
-        location: strip_prefix(prefix, meta.location),
-        e_tag: meta.e_tag,
-        version: meta.version,
+        last_modified: last_modified,
+        size: size,
+        location: strip_prefix(prefix, location),
+        e_tag: e_tag,
+        version: version,
     }
 }
 
