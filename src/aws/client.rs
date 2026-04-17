@@ -1167,7 +1167,8 @@ mod tests {
                 parts,
                 CompleteMultipartMode::Overwrite,
             )
-            .await.unwrap();
+            .await
+            .unwrap();
         mock.shutdown().await;
     }
 }
