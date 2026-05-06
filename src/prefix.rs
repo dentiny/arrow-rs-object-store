@@ -339,13 +339,19 @@ mod tests {
             version: Some("version-value".to_string()),
         };
 
-        let stripped = strip_meta(&prefix, meta.clone());
+        let ObjectMeta {
+            location,
+            last_modified,
+            size,
+            e_tag,
+            version,
+        } = strip_meta(&prefix, meta.clone());
 
-        assert_eq!(stripped.location, Path::from("foo"));
-        assert_eq!(stripped.last_modified, meta.last_modified);
-        assert_eq!(stripped.size, meta.size);
-        assert_eq!(stripped.e_tag, meta.e_tag);
-        assert_eq!(stripped.version, meta.version);
+        assert_eq!(location, Path::from("foo"));
+        assert_eq!(last_modified, meta.last_modified);
+        assert_eq!(size, meta.size);
+        assert_eq!(e_tag, meta.e_tag);
+        assert_eq!(version, meta.version);
     }
 
     #[tokio::test]
